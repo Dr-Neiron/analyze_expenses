@@ -2,10 +2,9 @@ import pandas
 import argparse
 import matplotlib.pyplot as plots
 
-COLUMN_NAMES = ['Date', 'Amount', 'Description', '1', '2', '3', '4', '5']
-
 
 def parse_raw_file(file_name):
+    COLUMN_NAMES = ['Date', 'Amount', '1', '2', 'Operation', 'Description', 'Remaining']
     df = pandas.read_csv(file_name, header=None, names=COLUMN_NAMES, skip_blank_lines=True)
     df['Date'] = pandas.to_datetime(df.Date, dayfirst=True)
     return df
@@ -20,6 +19,11 @@ def summarize(df, max_columns=3, show_plot=False):
     grouped['Total'] = grouped.sum(axis=1)
 
     print(grouped)
+    print('-----------')
+
+    delta = df['Date'].iloc[0] - df['Date'].iloc[-1]
+    print(df.groupby(['Category'])[['Amount']].sum().sort_values('Amount') / delta.days * 365 / 12)
+
     if show_plot:
         grouped.plot()
         plots.show()
@@ -42,29 +46,37 @@ def categorize(df):
         'Food and chemistry': ['COLES', 'WOOLWORTH', 'ALDI', 'CHEMIST', 'MCDONALDS',
                                'KITCHEN', 'KAZACHOK', 'BUTCHER', 'SEAFOOD', 'PIZZA', 'MARROO',
                                'EUROPA', 'COSTCO WHOLESALE', 'MOORABBIN WSALE FFM', 'BLAHNIK',
-                               'FHLL GROUP'],
+                               'FHLL GROUP', 'FRESH WAREHOUSE DIRECT', 'INTERNET TRANSFER grocery',
+                               'CHAPEL ROAD EGGS', 'FOODWORKS', 'MPF DANDENONG PTY LT', 'INTERNET TRANSFER cherry',
+                               'KINGSTON FOOD HANGAR', 'WOW THRIFT', 'THAILANDER EMPORIUM MELBOURNE',
+                               'HELLOFRESH'],
         'Rent': ['BARRY', 'DEFT'],
         'Internet': ['SPINTEL'],
-        'Electricity, gas and water': ['AGL', 'WATER'],
-        'Phone': ['VODAFONE', 'KOGAN'],
+        'Home Bills': ['AGL', 'WATER'],
+        'Phone': ['VODAFONE', 'Kogan Mobile'],
         'Furniture and clothes': ['IKEA', 'KMART', 'BIG W', 'ALIEXPRESS', 'TARGET', 'SHOEMAKERS',
-                                  'PAULS WAREHOUSE', 'SAVERS', 'REJECT SHOP', 'BEST AND LESS'],
-        'Electronics': ['JB HI FI', 'GOODGUYS', 'OFFICEWORKS', 'HARVEY NORMAN'],
+                                  'PAULS WAREHOUSE', 'SAVERS', 'REJECT SHOP', 'BEST AND LESS',
+                                  'KATHMANDU', 'MERRELL', 'TK MAXX', 'iShoes Pop-Up Kangaroo',
+                                  'PHOENIX LEISURE GROU INGLEBURN'],
+        'Electronics': ['JB HI FI', 'GOODGUYS', 'OFFICEWORKS', 'HARVEY NORMAN', 'TOBYDEALS', 'JB HI-FI'],
         'Transport': ['TRANSPORT', 'UBER', 'MYKI'],
-        'Salary': ['SALARY', 'ATO'],
+        'Salary': ['SALARY', 'ATO', 'Blackmagic Design'],
         'Medicine': ['NIB', 'AVERGUN', 'CLINICAL LABS', 'RADIOLOGY', 'MASSAGE', 'PHARMACY',
                      'HEALTH'],
-        'Fun': ['LUNA PARK', 'DON TATNELL', 'ZOO', 'HOBBIES', 'BCF', 'GAINFUL', 'MYUNA'],
-        'Cash': ['ANZ ATM'],
-        'To Mariia': ['MARIIA'],
+        'Fun': ['LUNA PARK', 'DON TATNELL', 'ZOO', 'HOBBIES', 'BCF', 'GAINFUL', 'MYUNA', 'STUDIO Z',
+                'PlaystationNetwork'],
+        'Cash': ['ANZ ATM', 'ATM DEBIT', 'NABATM'],
+        'To Mariia': ['MARIIA', 'BEEM IT', 'INTERNET TRANSFER Mariia'],
         'Tools': ['BIKES', 'BUNNINGS'],
-        'Savings': ['ANZ M-BANKING FUNDS TFER TRANSFER'],
+        'Savings': ['ANZ M-BANKING FUNDS TFER TRANSFER', 'Linked Acc Trns MAKSIM', 'Linked Acc Trns     MAKSIM'],
         'Ignore': ['ACCOUNT SERVICING FEE', 'DEBIT INTEREST CHARGED'],
         'Car': ['FUEL', 'LINKT', 'CITYLINK', 'ROADS', '17126', 'TOYOTA', 'AUTO',
-                'CITY OF GREATER DAND', 'PARKIN', 'ROOF RACK', 'BINGLE', 'VICROADS'],
+                'CITY OF GREATER DAND', 'PARKIN', 'ROOF RACK', 'BINGLE', 'VICROADS', 'CIRCUM WASH',
+                'STONNINGTON CITY COUNC'],
         'Car itself': ['MAYSARAH'],
         'Visas and other Gov': ['AFFAIRS', 'BUPA MEDICAL VISA', 'DEPARTMENT OF HOME'],
-        'Travel and tickets': ['BOOKING.COM', 'AIRBNB', 'QATAR']
+        'Travel and tickets': ['BOOKING.COM', 'AIRBNB', 'QATAR', 'camping', 'PARKS VIC', 'BIG4 HAWTHORN', 'Denis W Prom'],
+        'Childcare': ['VERONIKA SULDINA']
     }
 
     df['Category'] = 'Other'
@@ -93,6 +105,14 @@ def experiment(input_file):
 
 def write_to_file(df, file_name):
     df.to_csv(file_name, index=False)
+
+
+def analyze_file(input_file):
+    df = parse_raw_file(input_file)
+    df = categorize(df)
+    # print_unknown(df)
+    summarize(df)
+    write_to_file(df, 'test.csv')
 
 
 if __name__ == '__main__':
